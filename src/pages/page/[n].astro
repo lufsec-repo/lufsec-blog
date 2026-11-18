@@ -7,7 +7,7 @@ import { SITE } from '../../site';
 
 export async function getStaticPaths() {
   const posts = await getPosts();
-  return paginate(posts, SITE.postsPerPage, '/')
+  return paginate(posts, SITE.postsPerPage, '/', SITE.postsPerPage + 1)
     .slice(1)
     .map((page) => ({ params: { n: String(page.n) }, props: { page } }));
 }

@@ -89,7 +89,9 @@ h1, h2, h3, h4 { font-family: var(--head); }
 .card-body { padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
 .card-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .card-meta time { color: var(--muted); font-size: .82rem; white-space: nowrap; }
-.card h3 { font: 600 1.15rem/1.35 var(--head); margin: 0; }
+.card h3 { font: 600 1.15rem/1.35 var(--head); margin: 0; flex: 1; }
+.date { color: #d4d6db; font-size: .88rem; font-weight: 500; }
+.date::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 8px; vertical-align: middle; }
 .card h3 a { color: var(--text); }
 .card h3 a:hover { color: var(--accent); text-decoration: none; }
 .tag { display: inline-block; font: 700 .72rem/1 var(--head); text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }

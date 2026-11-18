@@ -6,7 +6,7 @@ import { getPosts, paginate } from '../lib/posts';
 import { SITE, PATHS } from '../site';
 
 const posts = await getPosts();
-const page = paginate(posts, SITE.postsPerPage, '/')[0];
+const page = paginate(posts, SITE.postsPerPage, '/', SITE.postsPerPage + 1)[0];
 const [lead, ...rest] = page.items;
 ---
 <Base>
@@ -29,6 +29,7 @@ const [lead, ...rest] = page.items;
         <div class="lead-body">
           {lead.data.tags[0] && <span class="tag">{lead.data.tags[0]}</span>}
           <h3>{lead.data.title}</h3>
+          <time class="date" datetime={lead.data.pubDate.toISOString()}>{lead.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
           <p>{lead.data.description}</p>
           <span class="read-more">Read article →</span>
         </div>

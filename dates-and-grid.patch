@@ -1,0 +1,92 @@
+diff --git a/src/components/PostCard.astro b/src/components/PostCard.astro
+index 6df4a08..433180b 100644
+--- a/src/components/PostCard.astro
++++ b/src/components/PostCard.astro
+@@ -10,10 +10,8 @@ const date = d.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'sh
+     {d.image ? <img src={d.image} alt="" loading="lazy" /> : <div class="card-img-fallback"><img src="/lufsec-logo.png" alt="" /></div>}
+   </a>
+   <div class="card-body">
+-    <div class="card-meta">
+-      {d.tags[0] && <a class="tag" href={`/tag/${d.tagSlugs[0]}/`}>{d.tags[0]}</a>}
+-      <time datetime={d.pubDate.toISOString()}>{date}</time>
+-    </div>
++    {d.tags[0] && <a class="tag" href={`/tag/${d.tagSlugs[0]}/`}>{d.tags[0]}</a>}
+     <h3><a href={`/${post.id}/`}>{d.title}</a></h3>
++    <time class="date" datetime={d.pubDate.toISOString()}>{date}</time>
+   </div>
+ </article>
+diff --git a/src/lib/posts.ts b/src/lib/posts.ts
+index 616ea32..0601636 100644
+--- a/src/lib/posts.ts
++++ b/src/lib/posts.ts
+@@ -6,14 +6,18 @@ export async function getPosts() {
+ }
+ 
+ // Ghost-style pagination: page 1 at the base, then /page/2/, /page/3/ …
+-export function paginate<T>(items: T[], perPage: number, base: string) {
+-  const last = Math.max(1, Math.ceil(items.length / perPage));
++// firstPage lets the homepage show one extra post (the large "latest" card + a full grid).
++export function paginate<T>(items: T[], perPage: number, base: string, firstPage = perPage) {
++  const rest = Math.max(0, items.length - firstPage);
++  const last = 1 + Math.ceil(rest / perPage);
+   return Array.from({ length: last }, (_, i) => {
+     const n = i + 1;
+     const url = (p: number) => (p === 1 ? base : `${base}page/${p}/`);
++    const start = i === 0 ? 0 : firstPage + (i - 1) * perPage;
++    const end = i === 0 ? firstPage : start + perPage;
+     return {
+       n,
+-      items: items.slice(i * perPage, n * perPage),
++      items: items.slice(start, end),
+       current: n,
+       last,
+       prev: n > 1 ? url(n - 1) : undefined,
+diff --git a/src/pages/index.astro b/src/pages/index.astro
+index bf7860a..a5beb62 100644
+--- a/src/pages/index.astro
++++ b/src/pages/index.astro
+@@ -6,7 +6,7 @@ import { getPosts, paginate } from '../lib/posts';
+ import { SITE, PATHS } from '../site';
+ 
+ const posts = await getPosts();
+-const page = paginate(posts, SITE.postsPerPage, '/')[0];
++const page = paginate(posts, SITE.postsPerPage, '/', SITE.postsPerPage + 1)[0];
+ const [lead, ...rest] = page.items;
+ ---
+ <Base>
+@@ -29,6 +29,7 @@ const [lead, ...rest] = page.items;
+         <div class="lead-body">
+           {lead.data.tags[0] && <span class="tag">{lead.data.tags[0]}</span>}
+           <h3>{lead.data.title}</h3>
++          <time class="date" datetime={lead.data.pubDate.toISOString()}>{lead.data.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</time>
+           <p>{lead.data.description}</p>
+           <span class="read-more">Read article →</span>
+         </div>
+diff --git a/src/pages/page/[n].astro b/src/pages/page/[n].astro
+index 2b96a7d..b997c2c 100644
+--- a/src/pages/page/[n].astro
++++ b/src/pages/page/[n].astro
+@@ -7,7 +7,7 @@ import { SITE } from '../../site';
+ 
+ export async function getStaticPaths() {
+   const posts = await getPosts();
+-  return paginate(posts, SITE.postsPerPage, '/')
++  return paginate(posts, SITE.postsPerPage, '/', SITE.postsPerPage + 1)
+     .slice(1)
+     .map((page) => ({ params: { n: String(page.n) }, props: { page } }));
+ }
+diff --git a/src/styles/global.css b/src/styles/global.css
+index 7962f1d..1c195b2 100644
+--- a/src/styles/global.css
++++ b/src/styles/global.css
+@@ -89,7 +89,9 @@ h1, h2, h3, h4 { font-family: var(--head); }
+ .card-body { padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+ .card-meta { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+ .card-meta time { color: var(--muted); font-size: .82rem; white-space: nowrap; }
+-.card h3 { font: 600 1.15rem/1.35 var(--head); margin: 0; }
++.card h3 { font: 600 1.15rem/1.35 var(--head); margin: 0; flex: 1; }
++.date { color: #d4d6db; font-size: .88rem; font-weight: 500; }
++.date::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-right: 8px; vertical-align: middle; }
+ .card h3 a { color: var(--text); }
+ .card h3 a:hover { color: var(--accent); text-decoration: none; }
+ .tag { display: inline-block; font: 700 .72rem/1 var(--head); text-transform: uppercase; letter-spacing: .06em; color: var(--accent); }

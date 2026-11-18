@@ -10,10 +10,8 @@ const date = d.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'sh
     {d.image ? <img src={d.image} alt="" loading="lazy" /> : <div class="card-img-fallback"><img src="/lufsec-logo.png" alt="" /></div>}
   </a>
   <div class="card-body">
-    <div class="card-meta">
-      {d.tags[0] && <a class="tag" href={`/tag/${d.tagSlugs[0]}/`}>{d.tags[0]}</a>}
-      <time datetime={d.pubDate.toISOString()}>{date}</time>
-    </div>
+    {d.tags[0] && <a class="tag" href={`/tag/${d.tagSlugs[0]}/`}>{d.tags[0]}</a>}
     <h3><a href={`/${post.id}/`}>{d.title}</a></h3>
+    <time class="date" datetime={d.pubDate.toISOString()}>{date}</time>
   </div>
 </article>
