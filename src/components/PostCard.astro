@@ -1,0 +1,19 @@
+---
+import type { CollectionEntry } from 'astro:content';
+interface Props { post: CollectionEntry<'posts'> }
+const { post } = Astro.props;
+const d = post.data;
+const date = d.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+<article class="card">
+  <a href={`/${post.id}/`} class="card-img" tabindex="-1" aria-hidden="true">
+    {d.image ? <img src={d.image} alt="" loading="lazy" /> : <div class="card-img-fallback"><img src="/lufsec-logo.png" alt="" /></div>}
+  </a>
+  <div class="card-body">
+    <div class="card-meta">
+      {d.tags[0] && <a class="tag" href={`/tag/${d.tagSlugs[0]}/`}>{d.tags[0]}</a>}
+      <time datetime={d.pubDate.toISOString()}>{date}</time>
+    </div>
+    <h3><a href={`/${post.id}/`}>{d.title}</a></h3>
+  </div>
+</article>

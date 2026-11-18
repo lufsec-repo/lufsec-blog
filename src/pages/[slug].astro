@@ -1,0 +1,75 @@
+---
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import PostCard from '../components/PostCard.astro';
+import { getPosts } from '../lib/posts';
+import { COURSE_CTA } from '../site';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post, posts } }));
+}
+const { post, posts } = Astro.props;
+const d = post.data;
+const { Content } = await render(post);
+const date = d.pubDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+// Related: most shared tags, then most recent
+const related = posts
+  .filter((p) => p.id !== post.id)
+  .map((p) => ({ p, score: p.data.tagSlugs.filter((t) => d.tagSlugs.includes(t)).length }))
+  .filter((x) => x.score > 0)
+  .sort((a, b) => b.score - a.score || b.p.data.pubDate.valueOf() - a.p.data.pubDate.valueOf())
+  .slice(0, 3)
+  .map((x) => x.p);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: d.title,
+  datePublished: d.pubDate.toISOString(),
+  dateModified: (d.updatedDate ?? d.pubDate).toISOString(),
+  author: { '@type': 'Person', name: d.author },
+  publisher: { '@type': 'Organization', name: 'LufSec' },
+  image: d.image ? new URL(d.image, 'https://blog.lufsec.com').href : undefined,
+  description: d.description,
+};
+---
+<Base title={d.metaTitle ?? d.title} description={d.description} image={d.image} canonical={d.canonical} type="article" publishedTime={d.pubDate.toISOString()}>
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  <article class="post">
+    <header class="wrap-narrow post-header">
+      <div class="post-tags">
+        {d.tags.map((t, i) => <a class="tag" href={`/tag/${d.tagSlugs[i]}/`}>{t}</a>)}
+      </div>
+      <h1>{d.title}</h1>
+      <p class="byline">By {d.author} · <time datetime={d.pubDate.toISOString()}>{date}</time></p>
+    </header>
+    {d.image && (
+      <figure class="post-hero wrap">
+        <img src={d.image} alt={d.imageAlt ?? ''} />
+      </figure>
+    )}
+    <div class="wrap-narrow prose">
+      <Content />
+    </div>
+    <aside class="wrap-narrow">
+      <div class="course-cta">
+        <div>
+          <h3>{COURSE_CTA.heading}</h3>
+          <p>{COURSE_CTA.text}</p>
+          <a class="btn" href={COURSE_CTA.href}>{COURSE_CTA.button}</a>
+        </div>
+        <ul>
+          {COURSE_CTA.points.map((pt) => <li><span class="dot" aria-hidden="true">✓</span>{pt}</li>)}
+        </ul>
+      </div>
+    </aside>
+  </article>
+  {related.length > 0 && (
+    <section class="wrap related">
+      <h2 class="section-title">Keep Reading</h2>
+      <div class="grid">{related.map((p) => <PostCard post={p} />)}</div>
+    </section>
+  )}
+</Base>

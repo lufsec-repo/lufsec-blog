@@ -1,0 +1,24 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import Pager from '../../components/Pager.astro';
+import { getPosts, paginate } from '../../lib/posts';
+import { SITE } from '../../site';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return paginate(posts, SITE.postsPerPage, '/')
+    .slice(1)
+    .map((page) => ({ params: { n: String(page.n) }, props: { page } }));
+}
+const { page } = Astro.props;
+---
+<Base title={`Page ${page.n}`}>
+  <section class="wrap page-top">
+    <h1 class="section-title">All posts <span class="muted">· page {page.n}</span></h1>
+    <div class="grid">
+      {page.items.map((post) => <PostCard post={post} />)}
+    </div>
+    <Pager {...page} />
+  </section>
+</Base>

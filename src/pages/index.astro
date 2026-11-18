@@ -1,0 +1,52 @@
+---
+import Base from '../layouts/Base.astro';
+import PostCard from '../components/PostCard.astro';
+import Pager from '../components/Pager.astro';
+import { getPosts, paginate } from '../lib/posts';
+import { SITE, PATHS } from '../site';
+
+const posts = await getPosts();
+const page = paginate(posts, SITE.postsPerPage, '/')[0];
+const [lead, ...rest] = page.items;
+---
+<Base>
+  <section class="hero" style={`--hero: url('${SITE.heroImage}')`}>
+    <div class="wrap hero-inner">
+      <h1>The LufSec Blog</h1>
+      <p class="lede">Hands-on cybersecurity research and training: AI security, automotive, IoT, pentesting and more.</p>
+      <div class="hero-actions">
+        <a class="btn" href="#latest">Read the Latest</a>
+        <a class="btn btn-ghost" href="https://www.lufsec.com/collections">Explore Courses</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="wrap section" id="latest">
+    <h2 class="section-title center">Latest Articles</h2>
+    {lead && (
+      <a class="lead-post" href={`/${lead.id}/`}>
+        {lead.data.image && <img src={lead.data.image} alt={lead.data.imageAlt ?? ''} />}
+        <div class="lead-body">
+          {lead.data.tags[0] && <span class="tag">{lead.data.tags[0]}</span>}
+          <h3>{lead.data.title}</h3>
+          <p>{lead.data.description}</p>
+          <span class="read-more">Read article →</span>
+        </div>
+      </a>
+    )}
+    <div class="grid">
+      {rest.map((post) => <PostCard post={post} />)}
+    </div>
+    <Pager {...page} />
+  </section>
+
+  <section class="paths">
+    <div class="wrap center">
+      <h2 class="section-title">Choose Your Path</h2>
+      <p class="sub">Explore hands-on cybersecurity training in AI, automotive, IoT, team awareness, and free starter resources.</p>
+      <div class="path-row">
+        {PATHS.map((p) => <a class="path" href={p.href}>{p.label}</a>)}
+      </div>
+    </div>
+  </section>
+</Base>
